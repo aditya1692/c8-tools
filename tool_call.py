@@ -3,7 +3,6 @@ The steps are in README.md. Each one adds a few lines to the bottom of this file
 import csv, io, json, os, sys
 import requests
 from dotenv import load_dotenv
-from sympy import false
 
 load_dotenv()
 if not os.environ.get("GROQ_API_KEY"):
@@ -40,7 +39,7 @@ messages = [{"role": "user", "content": question}]
 # Step 2. The card: fill in the two empty strings.
 card = {"type": "function", "function": {
     "name": "get_lecture",
-    "description": "user asks about a specific lecture by its number",                                                    # Use it when
+    "description": "user asks about a specific lecture from 100xEngineers Cohort 8 by its number",                                                    # Use it when
     "parameters": {"type": "object",
                    "properties": {"number": {"type": "integer",
                                              "description": "the lecture number"}},         # It needs
