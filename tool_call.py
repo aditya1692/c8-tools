@@ -24,6 +24,7 @@ def ask_model(messages, tools=None):
     body = {"model": "openai/gpt-oss-120b", "messages": messages}
     if tools:
         body["tools"] = tools
+
     r = requests.post("https://api.groq.com/openai/v1/chat/completions",
                       headers={"Authorization": "Bearer " + os.environ["GROQ_API_KEY"]}, json=body)
     r.raise_for_status()
@@ -38,18 +39,41 @@ messages = [{"role": "user", "content": question}]
 # Step 2. The card: fill in the two empty strings.
 card = {"type": "function", "function": {
     "name": "get_lecture",
-    "description": "",                                                    # Use it when
+    "description": "user asks about a specific lecture by its number",                                                    # Use it when
     "parameters": {"type": "object",
                    "properties": {"number": {"type": "integer",
-                                             "description": ""}},         # It needs
+                                             "description": "the lecture number"}},         # It needs
                    "required": ["number"]},
 }}
 
-reply = ask_model(messages)                 # Step 2: send the card too
-print(json.dumps(reply, indent=2, ensure_ascii=False))
+reply = ask_model(messages, [card])                # Step 2: send the card too
+# print(json.dumps(reply, indent=2, ensure_ascii=False))
 
 # Step 3. Run the request the model wrote.
+# if (reply.get("tool_calls")):
+#     tool_call = reply["tool_calls"][0]
+#     if tool_call["function"]["name"] == "get_lecture":
+#         args = json.loads(tool_call["function"]["arguments"])
+#         number = args["number"]
+#         result = get_lecture(number)
 
 # Step 4. Hand the result back to the model and print its answer.
+        # messages.append({"role": "assistant", "content": "", "tool_call": tool_call})
+        # messages.append({"role": "function", "name": "get_lecture", "content": json.dumps(result)})
+        # reply = ask_model(messages)
+        # print(json.dumps(reply, indent=2, ensure_ascii=False))
 
 # Step 5. Turn steps 3 and 4 into a loop.
+while (reply.get("tool_calls")):
+    tool_call = reply["tool_calls"][0]
+    if tool_call["function"]["name"] == "get_lecture":
+        args = json.loads(tool_call["function"]["arguments"])
+        number = args["number"]
+        result = get_lecture(number)
+
+        # Step 4: Hand the result back to the model and run the loop again
+        messages.append({"role": "assistant", "content": "", "tool_calls": [tool_call]})
+        messages.append({"role": "tool", "tool_call_id": tool_call["id"], "content": json.dumps(result)})
+        reply = ask_model(messages,[card])
+
+print(reply["content"])
