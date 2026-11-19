@@ -3,6 +3,7 @@ The steps are in README.md. Each one adds a few lines to the bottom of this file
 import csv, io, json, os, sys
 import requests
 from dotenv import load_dotenv
+from sympy import false
 
 load_dotenv()
 if not os.environ.get("GROQ_API_KEY"):
@@ -63,8 +64,11 @@ reply = ask_model(messages, [card])                # Step 2: send the card too
         # reply = ask_model(messages)
         # print(json.dumps(reply, indent=2, ensure_ascii=False))
 
+asked_for_tool = False
+
 # Step 5. Turn steps 3 and 4 into a loop.
 while (reply.get("tool_calls")):
+    asked_for_tool = True
     tool_call = reply["tool_calls"][0]
     if tool_call["function"]["name"] == "get_lecture":
         args = json.loads(tool_call["function"]["arguments"])
@@ -76,4 +80,4 @@ while (reply.get("tool_calls")):
         messages.append({"role": "tool", "tool_call_id": tool_call["id"], "content": json.dumps(result)})
         reply = ask_model(messages,[card])
 
-print(reply["content"])
+print("Asked for tool:", asked_for_tool, "\n Response:", reply["content"])
